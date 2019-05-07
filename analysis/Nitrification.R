@@ -1,56 +1,59 @@
-## Nitrification potentials in soil
+## Soil nitrification potentials
 ## for CT_amoA study
 ## Paul C. Selmants
 ## 2018-04-13
-## R version 3.4.4
+## R version 3.5.3
 
-#load dplyr version 0.7.4 into  R
+#load dplyr version 0.8.0.1 and tidyr version 0.8.3 into R
 library(dplyr)
+library(tidyr)
 
 #Read raw, blank-corrected NO3 concentration data (mg NO3-N/L) 
 #into R and calculate regression slope for each sample incubation period
 NO3_slope <- read.csv("NO3_raw.csv", stringsAsFactors = FALSE) %>%
-	group_by(Stand, Sample) %>%
+	group_by(stand, sample) %>%
 	summarize(slope = lm(NO3_bc ~ incub_h)$coefficients[2])
 
 #Read nitrif soil sample mass (g) and GWC data (proportion) into R and
 #reformat ID labels into separate columns for Stand and Sample
 soil <- read.csv("nitrif_soil.csv", stringsAsFactors = FALSE) %>%
-	mutate(Stand = rep(c('BSH', 'FSH', 'HEN', 'INT', 'LCO',
-	 'LVY', 'RRD','UCO', 'UIN'), each = 6),
-		Sample = rep(c(1:6), times = 9)) %>%
-	select(Stand, Sample, fwt_g, GWC)
+	separate(Soil_ID, c("stand", "sample"), convert = TRUE) %>%
+	select(zone, stand, sample, fwt_g, GWC)
 
 #join NO3 incubation slope data with soil data, calculate 
 #potential nitrifcation rates in mg NO3-N/kg dry soil/day, and
 #summarize by calculating stand mean and standard error
-nitrif <- left_join(NO3_slope, soil, by = c("Stand", "Sample")) %>%
+nitrif <- left_join(NO3_slope, soil, by = c("stand", "sample")) %>%
 	mutate(volH2O = fwt_g*GWC/1000,
 		dry_soil = fwt_g/(1+GWC)/1000, 
 		rate_h = slope*((0.1+volH2O)/dry_soil),
 		rate_d = rate_h*24) %>%
-	group_by(Stand) %>%
+	group_by(zone, stand) %>%
 	summarize(nitr_mean = mean(rate_d),
 		nitr_se = (sd(rate_d))/(sqrt(6)))
 
 #read in soluble and bound foliar condensed tannin (CT) concentration data,
-#sum to get total CT, and calculate mean and standard error by stand
+#sum to get total foliar CT concentrations. 
 ct <- read.csv('foliarCT_test.csv', stringsAsFactors = FALSE) %>%
 	mutate(totalCT = boundCT + solubleCT) %>%
-	select(Stand, totalCT) %>%
-	group_by(Stand) %>%
-	summarize(CT_mean = mean(totalCT),
-		CT_se = (sd(totalCT))/sqrt(6))
+	select(zone, stand, totalCT) 
+#calculate foliar ct mean and standard deviation by zone
+zone_ct <- ct %>%
+	group_by(zone) %>%
+	summarize(ct_mean = mean(totalCT), 
+		ct_sd = sd(totalCT), 
+		ct_se = ct_sd/sqrt(18))
+#calculate foliar ct mean and standard error by stand
+stand_ct <- ct %>%
+	group_by(zone, stand) %>%
+	summarize(ct_mean = mean(totalCT),
+		ct_se = (sd(totalCT))/sqrt(6))
 
 #join soil potential nitrification data with foliar condensed tannin data
-ctnitrif <- left_join(nitrif, ct, by = 'Stand') 
+ctnitrif <- left_join(nitrif, stand_ct, by = c('zone', 'stand'))
 
-#linear model of mean stand-level soil nitrification as a function of 
-#mean stand-level foliar condensed tannins
-nitrCTmod <- lm(nitr_mean ~ CT_mean, data = ctnitrif)
-
-#Pull out R-squared and p-value from summary of linear model 
-rsq <- round(summary(nitrCTmod)$adj.r.squared, digits = 2)
-p_value <- round(summary(nitrCTmod)$coefficients[2,4], digits = 3)
+#linear model of mean stand-level soil nitrification potential 
+#as a function of mean stand-level foliar condensed tannins
+nitrCTmod <- lm(nitr_mean ~ ct_mean, data = ctnitrif)
 
 
