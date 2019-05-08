@@ -26,7 +26,7 @@ np <- ggplot(ctnitrif, aes(ct_mean, nitr_mean, shape = zone)) +
 	scale_y_continuous(breaks = seq(0,14,2), limits = c(0,14),
 		name = bquote(
 			'Nitrification potential (mg NO'[3]['-']*'-N kg'^-1*' d'^-1*')')) +
-	scale_x_continuous(breaks = seq(0,20,4), limits = c(0,22),
+	scale_x_continuous(breaks = seq(0,200,40), limits = c(0,220),
 		name = "") + 
 	theme_classic() +
 	theme(axis.title.x = element_text(size=11),
@@ -50,10 +50,11 @@ ap <- ggplot(amoAct, aes(ct_mean, arc_mean, shape = zone)) +
 	geom_smooth(method = lm, se = FALSE, aes(group = 1)) +
 	scale_y_continuous(breaks = seq(0,24,4), limits = c(0,24),
 		name = expression(Archaeal~italic(amoA)~(10^6~copies~g^-1))) +
-	scale_x_continuous(breaks = seq(0,20,4), limits = c(0,22),
+	scale_x_continuous(breaks = seq(0,200,40), limits = c(0,220),
 		name = "") + 
 	theme_classic() +
-	scale_shape_discrete('Zone') +
+	scale_shape_discrete(name = 'Zone', 
+		labels = c('Fremont', 'hybrid', 'narrowleaf')) +
 	theme(axis.title.x = element_text(size=11),
            axis.text.x  = element_text(size=10),
            axis.title.y = element_text(size=11),
@@ -78,7 +79,7 @@ bp <- ggplot(amoAct, aes(ct_mean, bac_mean, shape = zone)) +
 	geom_point(size = 2.5) +
 	scale_y_continuous(breaks = seq(0,24,4), limits = c(0,24),
 		name = expression(Bacterial~italic(amoA)~(10^6~copies~g^-1))) +	
-	scale_x_continuous(breaks = seq(0,20,4), limits = c(0,22),
+	scale_x_continuous(breaks = seq(0,200,40), limits = c(0,220),
 		name = expression(Foliar~condensed~tannins~(mg~g^-1))) + 
 	theme_classic() +
 	theme(axis.title.x = element_text(size=11),

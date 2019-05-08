@@ -2,6 +2,7 @@
 ## for CT_amoA study
 ## Paul C. Selmants
 ## 2018-04-13
+## updated 2019-05-08
 ## R version 3.5.3
 
 #load dplyr version 0.8.0.1 and tidyr version 0.8.3 into R
@@ -32,10 +33,10 @@ nitrif <- left_join(NO3_slope, soil, by = c("stand", "sample")) %>%
 	summarize(nitr_mean = mean(rate_d),
 		nitr_se = (sd(rate_d))/(sqrt(6)))
 
-#read in soluble and bound foliar condensed tannin (CT) concentration data,
-#sum to get total foliar CT concentrations. 
+#read in soluble and bound foliar condensed tannin (CT) concentration data (%),
+#sum to get total foliar % CT, mulitiply by 10 to get mg/g. 
 ct <- read.csv('foliarCT_test.csv', stringsAsFactors = FALSE) %>%
-	mutate(totalCT = boundCT + solubleCT) %>%
+	mutate(totalCT = (boundCT + solubleCT)*10) %>%
 	select(zone, stand, totalCT) 
 #calculate foliar ct mean and standard deviation by zone
 zone_ct <- ct %>%
@@ -55,5 +56,4 @@ ctnitrif <- left_join(nitrif, stand_ct, by = c('zone', 'stand'))
 #linear model of mean stand-level soil nitrification potential 
 #as a function of mean stand-level foliar condensed tannins
 nitrCTmod <- lm(nitr_mean ~ ct_mean, data = ctnitrif)
-
 
